@@ -1,390 +1,738 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>나의 하루 일과표</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;background:#f9f9f9;color:#111;font-size:14px;max-width:480px;margin:0 auto;}
-.hdr{background:#fff;border-bottom:1px solid #e0e0e0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;}
-.title{font-size:17px;font-weight:700;}.title span{color:#E07B2E;}
-.sub{font-size:11px;color:#888;margin-top:2px;}
-.clk{font-size:21px;font-weight:700;text-align:right;}
-.dt{font-size:10px;color:#888;text-align:right;}
+body{font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;background:#f4f4f4;color:#111;font-size:14px;}
+
+/* ── Setup ── */
+#setup{min-height:100vh;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;}
+.setup-title{font-size:24px;font-weight:700;margin-bottom:6px;}
+.setup-title span{color:#E07B2E;}
+.setup-sub{font-size:13px;color:#888;margin-bottom:32px;}
+.setup-label{font-size:12px;font-weight:700;color:#555;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;}
+.setup-section{width:100%;max-width:360px;margin-bottom:24px;}
+.ls-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ls-btn{padding:12px 6px;border:2px solid #e0e0e0;border-radius:12px;background:#fff;cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all .15s;}
+.ls-btn .ls-ico{font-size:22px;display:block;margin-bottom:4px;}
+.ls-btn.sel{border-color:#E07B2E;background:#fff8f3;color:#E07B2E;}
+.time-pick{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:12px;font-size:16px;font-weight:600;outline:none;text-align:center;}
+.time-pick:focus{border-color:#E07B2E;}
+.start-btn{width:100%;max-width:360px;padding:14px;background:#E07B2E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
+.start-btn:hover{opacity:.9;}
+
+/* ── Main App ── */
+#main{display:none;}
+.hdr{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20;}
+.appname{font-size:15px;font-weight:700;}.appname em{font-style:normal;color:#E07B2E;}
+.hdr-right{text-align:right;}
+.clk{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
+.dt{font-size:10px;color:#888;margin-top:1px;}
+
 .stats{display:grid;grid-template-columns:repeat(4,1fr);background:#e0e0e0;gap:1px;border-bottom:1px solid #e0e0e0;}
-.st{background:#f4f4f4;padding:9px 4px;text-align:center;}
-.sv{font-size:14px;font-weight:700;color:#111;}
+.st{background:#f4f4f4;padding:8px 4px;text-align:center;}
+.sv{font-size:13px;font-weight:700;}
 .sl{font-size:10px;color:#888;}
-.shdr{padding:7px 16px;color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;}
-.row{display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid #eee;background:#fff;align-items:flex-start;}
-.row:hover{background:#f9f9f9;}
-.row.now{background:#fff8f8;}
-.time{font-size:11px;color:#888;width:38px;flex-shrink:0;font-weight:500;}
-.ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
-.info{flex:1;}
-.itit{font-size:13px;font-weight:700;margin-bottom:2px;}
-.isub{font-size:11px;color:#888;}
-.tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;margin-top:4px;font-weight:600;}
-.ntag{display:inline-block;background:#C0392B;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:6px;}
-.card{margin:4px 14px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:12px 14px;}
-.ctit{font-size:10px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
 
-/* Google 연결 */
-.gcard{margin:10px 14px;background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:12px 14px;}
-.grow{display:flex;align-items:center;gap:10px;}
-.gico{width:36px;height:36px;border-radius:50%;background:#4285f4;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;}
-.gico.on{background:#34a853;}
-.ginfo{flex:1;}
-.gtit{font-size:13px;font-weight:700;}
-.gsub{font-size:11px;color:#888;margin-top:2px;}
-.gbtn{padding:7px 13px;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;}
-.gbtn.off{background:#4285f4;color:#fff;}
-.gbtn.on{background:#f1f3f4;color:#333;border:1px solid #e0e0e0;}
-.guser{display:none;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #eee;}
-.gavt{width:32px;height:32px;border-radius:50%;background:#4285f4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
-.gname{font-size:12px;font-weight:700;}
-.gmail{font-size:11px;color:#888;}
-.gsync{font-size:10px;color:#34a853;margin-top:1px;}
-.gsheets{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee;}
-.gsrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f4f4f4;}
-.gsrow:last-child{border-bottom:none;}
-.gstxt{font-size:12px;}
-.gsbadge{margin-left:auto;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;background:#e0fff0;color:#1E8449;}
+/* ── Schedule rows ── */
+.shdr{padding:6px 14px;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:6px;}
+.row{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid #eee;background:#fff;align-items:center;cursor:pointer;user-select:none;transition:background .1s;}
+.row:hover{background:#fafafa;}
+.row.now{background:#fffaf7;}
+.row.active{background:#fff8f3;}
+.rtime{font-size:11px;color:#888;width:38px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.rico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.rinfo{flex:1;min-width:0;}
+.rtit{font-size:13px;font-weight:700;margin-bottom:1px;}
+.rsub{font-size:11px;color:#888;}
+.rarr{font-size:18px;color:#ccc;transition:transform .2s;flex-shrink:0;}
+.row.active .rarr{transform:rotate(90deg);color:#E07B2E;}
+.now-tag{font-size:9px;background:#C0392B;color:#fff;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:5px;vertical-align:middle;}
 
-/* Tasks */
-.tasklist{display:flex;flex-direction:column;gap:8px;}
-.task{display:flex;align-items:center;gap:8px;cursor:pointer;}
-.chk{width:19px;height:19px;border:2px solid #ccc;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.chk.done{background:#1E8449;border-color:#1E8449;color:#fff;font-size:12px;}
-.ttxt{font-size:13px;}
-.ttxt.done{text-decoration:line-through;color:#aaa;}
+/* ── Panel ── */
+.panel{max-height:0;overflow:hidden;transition:max-height .3s ease;background:#fafafa;border-bottom:1px solid #eee;}
+.panel.open{max-height:700px;}
+.panel-inner{padding:14px;}
+.panel-title{font-size:10px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;}
 
-/* Projects */
-.projrow{margin-bottom:10px;}
-.projrow:last-child{margin-bottom:0;}
-.projhead{display:flex;justify-content:space-between;margin-bottom:5px;}
-.pname{font-size:12px;font-weight:600;}
-.ppct{font-size:11px;color:#888;}
-.pbar{height:6px;background:#eee;border-radius:3px;}
-.pbarf{height:100%;border-radius:3px;}
+/* Panel components */
+.p-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.p-label{font-size:12px;color:#555;min-width:60px;}
+.p-input{flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;outline:none;}
+.p-input:focus{border-color:#E07B2E;}
+.p-btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;}
+.p-btn.primary{background:#E07B2E;color:#fff;}
+.p-btn.sec{background:#f0f0f0;color:#333;}
+.p-btn.green{background:#1E8449;color:#fff;}
+.p-btn.blue{background:#2563EB;color:#fff;}
+.p-btn.red{background:#C0392B;color:#fff;}
+.p-btn:hover{opacity:.88;}
 
-/* Diary */
-.moodrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.moodlbl{font-size:11px;color:#888;}
-.moodb{font-size:20px;background:none;border:2px solid #e0e0e0;border-radius:9px;padding:2px 6px;cursor:pointer;}
-.moodb.sel{border-color:#6C3483;background:#f5eeff;}
-.dbtns{display:flex;gap:8px;margin-top:8px;}
-.dbtn{flex:1;padding:8px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
-.dbtn.ai{background:#f4f4f4;border:1px solid #e0e0e0;color:#333;}
-.dbtn.sv{background:#212F3D;border:none;color:#fff;}
-textarea{width:100%;height:90px;border:1px solid #ddd;border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit;color:#111;background:#f9f9f9;resize:none;outline:none;line-height:1.6;}
+/* Task list */
+.task-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}
+.task-item{display:flex;align-items:center;gap:8px;}
+.task-chk{width:19px;height:19px;border:2px solid #ccc;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.task-chk.done{background:#1E8449;border-color:#1E8449;color:#fff;font-size:11px;}
+.task-txt{font-size:13px;flex:1;}
+.task-txt.done{text-decoration:line-through;color:#aaa;}
+.task-del{font-size:16px;color:#ccc;cursor:pointer;flex-shrink:0;}
+.task-del:hover{color:#e74c3c;}
+.add-task-row{display:flex;gap:6px;}
+.add-task-input{flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;outline:none;}
+.add-task-input:focus{border-color:#E07B2E;}
 
-/* Bottom Nav */
-.bnav{border-top:1px solid #e0e0e0;background:#fff;display:flex;padding:10px 0 20px;position:sticky;bottom:0;}
+/* Meal / Camera */
+.cam-area{border:2px dashed #ddd;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;transition:border-color .15s;}
+.cam-area:hover{border-color:#E07B2E;}
+.cam-area input{display:none;}
+.cam-preview{width:100%;border-radius:10px;margin-bottom:10px;display:none;}
+.ai-result{background:#e8f5e9;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:none;}
+.ai-result .ar-title{font-size:11px;font-weight:700;color:#1E8449;margin-bottom:6px;}
+.ai-result .ar-food{font-size:13px;font-weight:700;margin-bottom:2px;}
+.ai-result .ar-cal{font-size:12px;color:#555;}
+.ai-result .ar-comment{font-size:11px;color:#1E8449;margin-top:4px;}
+.cal-bar-wrap{margin-top:8px;}
+.cal-bar-label{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px;}
+.cal-bar{height:7px;background:#eee;border-radius:4px;overflow:hidden;}
+.cal-fill{height:100%;background:#1E8449;border-radius:4px;transition:width .5s;}
+.analyzing{text-align:center;padding:16px;color:#888;font-size:13px;display:none;}
+
+/* Mood buttons */
+.mood-row{display:flex;gap:6px;margin-bottom:10px;}
+.mood-btn{font-size:20px;background:none;border:2px solid #e0e0e0;border-radius:9px;padding:3px 7px;cursor:pointer;}
+.mood-btn.sel{border-color:#6C3483;background:#f5eeff;}
+.diary-area{width:100%;height:90px;border:1px solid #ddd;border-radius:9px;padding:9px 11px;font-size:13px;font-family:inherit;color:#111;background:#fff;resize:none;outline:none;line-height:1.6;margin-bottom:8px;}
+
+/* Music player */
+.music-player{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:10px;border:1px solid #eee;margin-bottom:8px;}
+.music-ico{width:38px;height:38px;border-radius:8px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.music-info{flex:1;}
+.music-title{font-size:13px;font-weight:700;}
+.music-artist{font-size:11px;color:#888;}
+.music-ctrl{display:flex;gap:6px;align-items:center;}
+.mc-btn{background:none;border:none;cursor:pointer;font-size:18px;}
+.mc-play{width:32px;height:32px;background:#6C3483;color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.music-prog{height:3px;background:#eee;border-radius:2px;margin-top:8px;}
+.music-prog-fill{height:100%;width:35%;background:#6C3483;border-radius:2px;}
+
+/* Exercise */
+.ex-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.ex-chip{padding:6px 12px;border:1.5px solid #e0e0e0;border-radius:20px;font-size:12px;cursor:pointer;background:#fff;}
+.ex-chip.sel{border-color:#1E8449;background:#e8f5e9;color:#1E8449;font-weight:700;}
+
+/* Bottom nav */
+.bnav{border-top:1px solid #e0e0e0;background:#fff;display:flex;padding:8px 0 14px;}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:2px 0;}
-.nii{font-size:22px;color:#bbb;}
-.nil{font-size:10px;color:#bbb;}
+.ni .nii{font-size:22px;color:#ccc;}
+.ni .nil{font-size:10px;color:#ccc;}
 .ni.on .nii,.ni.on .nil{color:#E07B2E;font-weight:700;}
+
+/* Google card */
+.g-card{margin:8px 12px;background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:10px 12px;}
+.g-row{display:flex;align-items:center;gap:10px;}
+.g-ico{width:32px;height:32px;border-radius:50%;background:#4285f4;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;}
+.g-ico.on{background:#34a853;}
+.g-info{flex:1;}
+.g-title{font-size:12px;font-weight:700;}
+.g-sub{font-size:11px;color:#888;}
+.g-btn{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#4285f4;color:#fff;white-space:nowrap;}
+.g-btn.on{background:#f0f0f0;color:#333;}
+
+/* Divider */
+.divider{height:8px;background:#f0f0f0;}
+
+/* Settings gear */
+.settings-btn{position:fixed;bottom:80px;right:14px;width:42px;height:42px;border-radius:50%;background:#fff;border:1px solid #ddd;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:15;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+
 @keyframes spin{to{transform:rotate(360deg);}}
+.spinning{animation:spin 1s linear infinite;display:inline-block;}
 </style>
-</head>
-<body>
 
-<!-- Header -->
-<div class="hdr">
-  <div><div class="title">나의 <span>하루</span> 일과표 📋</div><div class="sub">☀️ 서울 · 맑음</div></div>
-  <div><div class="clk" id="clk">--:--</div><div class="dt" id="cdt">---</div></div>
-</div>
+<!-- ════ Setup Screen ════ -->
+<div id="setup">
+  <div class="setup-title">나의 <span>하루</span> 일과표 📋</div>
+  <div class="setup-sub">기상 시간과 라이프스타일을 설정하면<br>하루 일과를 자동으로 만들어드려요</div>
 
-<!-- Stats -->
-<div class="stats">
-  <div class="st"><div style="font-size:17px;margin-bottom:2px;">✅</div><div class="sv" id="tstat">0/5</div><div class="sl">할 일</div></div>
-  <div class="st"><div style="font-size:17px;margin-bottom:2px;">🔥</div><div class="sv">1,240</div><div class="sl">kcal</div></div>
-  <div class="st"><div style="font-size:17px;margin-bottom:2px;">🏃</div><div class="sv">6,820</div><div class="sl">걸음</div></div>
-  <div class="st"><div style="font-size:17px;margin-bottom:2px;">🧠</div><div class="sv">2h30</div><div class="sl">집중</div></div>
-</div>
-
-<!-- 구글 연결 -->
-<div class="gcard">
-  <div class="grow">
-    <div class="gico" id="gico">G</div>
-    <div class="ginfo">
-      <div class="gtit">구글 계정 연결</div>
-      <div class="gsub" id="gsub">할일·일기·일정이 구글 시트에 자동 저장돼요</div>
+  <div class="setup-section">
+    <div class="setup-label">라이프스타일</div>
+    <div class="ls-grid">
+      <button class="ls-btn" data-v="직장인" onclick="selLS(this)"><span class="ls-ico">🏢</span>직장인</button>
+      <button class="ls-btn" data-v="재택근무" onclick="selLS(this)"><span class="ls-ico">🏠</span>재택근무</button>
+      <button class="ls-btn" data-v="학생" onclick="selLS(this)"><span class="ls-ico">📚</span>학생</button>
+      <button class="ls-btn" data-v="자영업자" onclick="selLS(this)"><span class="ls-ico">💼</span>자영업자</button>
+      <button class="ls-btn" data-v="야간근무" onclick="selLS(this)"><span class="ls-ico">🌙</span>야간근무</button>
+      <button class="ls-btn" data-v="프리랜서" onclick="selLS(this)"><span class="ls-ico">💻</span>프리랜서</button>
     </div>
-    <button class="gbtn off" id="gbtn" onclick="googleConnect()">연결하기</button>
   </div>
-  <div class="guser" id="guser">
-    <div class="gavt" id="gavt">?</div>
+
+  <div class="setup-section">
+    <div class="setup-label">기상 시간</div>
+    <input type="time" class="time-pick" id="wake-time" value="07:00">
+  </div>
+
+  <button class="start-btn" onclick="saveAndStart()">시작하기 →</button>
+</div>
+
+<!-- ════ Main App ════ -->
+<div id="main">
+  <div class="hdr">
     <div>
-      <div class="gname" id="gname">---</div>
-      <div class="gmail" id="gmail">---</div>
-      <div class="gsync" id="gsync">⏳ 동기화 중...</div>
+      <div class="appname">나의 <em>하루</em> 일과표 📋</div>
+      <div style="font-size:11px;color:#888;margin-top:2px;" id="lifestyle-tag">---</div>
+    </div>
+    <div class="hdr-right">
+      <div class="clk" id="clk">--:--</div>
+      <div class="dt" id="cdt">---</div>
     </div>
   </div>
-  <div class="gsheets" id="gsheets">
-    <div class="gsrow"><span>📋</span><span class="gstxt">할일 & 프로젝트</span><span class="gsbadge">시트 연결됨</span></div>
-    <div class="gsrow"><span>📔</span><span class="gstxt">일기 기록</span><span class="gsbadge">시트 연결됨</span></div>
-    <div class="gsrow"><span>🍽️</span><span class="gstxt">식단 & 칼로리</span><span class="gsbadge">시트 연결됨</span></div>
-    <div class="gsrow"><span>📅</span><span class="gstxt">구글 캘린더</span><span class="gsbadge">연결됨</span></div>
+
+  <div class="stats">
+    <div class="st"><div style="font-size:16px;margin-bottom:2px;">✅</div><div class="sv" id="task-stat">0/0</div><div class="sl">할 일</div></div>
+    <div class="st"><div style="font-size:16px;margin-bottom:2px;">🔥</div><div class="sv" id="cal-stat">0</div><div class="sl">kcal</div></div>
+    <div class="st"><div style="font-size:16px;margin-bottom:2px;">🏃</div><div class="sv">6,820</div><div class="sl">걸음</div></div>
+    <div class="st"><div style="font-size:16px;margin-bottom:2px;">🧠</div><div class="sv" id="focus-stat">0h</div><div class="sl">집중</div></div>
+  </div>
+
+  <div class="g-card">
+    <div class="g-row">
+      <div class="g-ico" id="g-ico">G</div>
+      <div class="g-info">
+        <div class="g-title" id="g-title">구글 계정 연결</div>
+        <div class="g-sub" id="g-sub">할일·일기가 구글 시트에 저장돼요</div>
+      </div>
+      <button class="g-btn" id="g-btn" onclick="googleConnect()">연결</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div id="schedule"></div>
+  <div style="height:80px;"></div>
+
+  <div class="bnav">
+    <div class="ni on" onclick="nav(this)"><div class="nii">🏠</div><div class="nil">홈</div></div>
+    <div class="ni" onclick="nav(this)"><div class="nii">📅</div><div class="nil">일정</div></div>
+    <div class="ni" onclick="nav(this)"><div class="nii">💚</div><div class="nil">건강</div></div>
+    <div class="ni" onclick="nav(this)"><div class="nii">📔</div><div class="nil">일기</div></div>
+    <div class="ni" onclick="nav(this)"><div class="nii">⚙️</div><div class="nil">설정</div></div>
   </div>
 </div>
 
-<!-- 아침 -->
-<div class="shdr" style="background:#7B9CC4;">🌅 아침 06:00 ~ 08:30</div>
-<div class="row"><div class="time">06:00</div><div class="ico" style="background:#ddeeff;">⏰</div><div class="info"><div class="itit">기상 · 알람</div><div class="isub">날씨 확인 · 가벼운 스트레칭</div></div></div>
-<div class="row"><div class="time">06:30</div><div class="ico" style="background:#fff0e0;">📅</div><div class="info"><div class="itit">오늘 일정 검토</div><div class="isub">양치하면서 · 스케줄 미리보기</div></div></div>
-<div class="row"><div class="time">07:00</div><div class="ico" style="background:#e0fff0;">🍚</div><div class="info"><div class="itit">아침 식사 + 뉴스 브리핑</div><div class="isub">경제·증시 AI 요약</div></div></div>
-
-<!-- 업무 -->
-<div class="shdr" style="background:#C0392B;">💼 업무 09:00 ~ 12:00</div>
-<div class="row now"><div class="time">09:00</div><div class="ico" style="background:#ffe0de;">🎯</div><div class="info"><div class="itit">업무 집중 시간 <span class="ntag">진행 중</span></div><div class="isub">프로젝트 관리 · 할일 수행</div></div></div>
-
-<div class="card">
-  <div class="ctit">☑️ 오늘의 할 일</div>
-  <div class="tasklist" id="tasks">
-    <div class="task"><div class="chk done">✓</div><span class="ttxt done">KOSPI 스크리너 FDR 전환</span></div>
-    <div class="task"><div class="chk done">✓</div><span class="ttxt done">NASDAQ 보고서 이메일 확인</span></div>
-    <div class="task"><div class="chk"></div><span class="ttxt">데이터 수집 모듈 리팩터링</span></div>
-    <div class="task"><div class="chk"></div><span class="ttxt">키움 조건검색 필터 업데이트</span></div>
-    <div class="task"><div class="chk"></div><span class="ttxt">영웅문4 자동화 테스트</span></div>
-  </div>
-</div>
-
-<div class="card">
-  <div class="ctit">📊 진행 중 프로젝트</div>
-  <div class="projrow"><div class="projhead"><span class="pname">KOSPI 스크리너</span><span class="ppct">65%</span></div><div class="pbar"><div class="pbarf" style="width:65%;background:#C0392B;"></div></div></div>
-  <div class="projrow"><div class="projhead"><span class="pname">NASDAQ AI 분석기</span><span class="ppct">85%</span></div><div class="pbar"><div class="pbarf" style="width:85%;background:#2563EB;"></div></div></div>
-  <div class="projrow"><div class="projhead"><span class="pname">하루 대시보드 앱</span><span class="ppct">20%</span></div><div class="pbar"><div class="pbarf" style="width:20%;background:#6C3483;"></div></div></div>
-</div>
-
-<!-- 취침 -->
-<div class="shdr" style="background:#212F3D;">⭐ 취침 22:00 ~</div>
-<div class="card">
-  <div class="ctit">✏️ 오늘 일기</div>
-  <div class="moodrow">
-    <span class="moodlbl">오늘 기분</span>
-    <button class="moodb">🤩</button>
-    <button class="moodb">😊</button>
-    <button class="moodb">😐</button>
-    <button class="moodb">😔</button>
-    <button class="moodb">😤</button>
-  </div>
-  <textarea id="dtxt" placeholder="오늘 하루를 자유롭게 기록해보세요..."></textarea>
-  <div class="dbtns">
-    <button class="dbtn sv" id="savbtn" onclick="saveDiary()">💾 저장 (구글 시트)</button>
-  </div>
-</div>
-
-<!-- Bottom Nav -->
-<div class="bnav">
-  <div class="ni on" onclick="nav(this)"><div class="nii">🏠</div><div class="nil">홈</div></div>
-  <div class="ni" onclick="nav(this)"><div class="nii">📅</div><div class="nil">일정</div></div>
-  <div class="ni" onclick="nav(this)"><div class="nii">💚</div><div class="nil">건강</div></div>
-  <div class="ni" onclick="nav(this)"><div class="nii">📔</div><div class="nil">일기</div></div>
-  <div class="ni" onclick="nav(this)"><div class="nii">⚙️</div><div class="nil">설정</div></div>
-</div>
+<button class="settings-btn" onclick="resetSettings()" title="설정 초기화" style="display:none;" id="reset-btn">⚙️</button>
 
 <script>
-// ═══════════════════════════════════════════
-// ✅ 설정값 (이미 입력됨)
-const CLIENT_ID = '233628638430-j49qgs0k6kpmvt5sjbdihef7sinhn2i5.apps.googleusercontent.com';
-const SHEET_ID  = '1PFtED0o-Zbz2WAS7vf9p864pdRSWrC1aBLLA89BDX6Y';
-const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.readonly';
-// ═══════════════════════════════════════════
+// ══ 데이터 ══
+let settings = JSON.parse(localStorage.getItem('dp_settings') || 'null');
+let tasks    = JSON.parse(localStorage.getItem('dp_tasks')    || '[]');
+let meals    = JSON.parse(localStorage.getItem('dp_meals')    || '[]');
+let diaryLog = JSON.parse(localStorage.getItem('dp_diary')    || '[]');
 
-let accessToken = null;
-let tokenClient = null;
-
-window.onload = function() {
-  const savedUser = localStorage.getItem('g_user');
-
-  function initTokenClient() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: (res) => {
-        if (res.access_token) {
-          accessToken = res.access_token;
-          if (!localStorage.getItem('g_user')) {
-            fetchUserInfo();
-          } else {
-            document.getElementById('gsync').textContent = '✅ 동기화 완료';
-            loadTasksFromSheet();
-          }
-        } else {
-          // 자동갱신 실패 시 연결 해제
-          localStorage.removeItem('g_user');
-          googleDisconnect();
-        }
-      }
-    });
-
-    // 이전에 연결한 기록 있으면 자동으로 토큰 갱신
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      showConnected(user.name, user.email);
-      tokenClient.requestAccessToken({ prompt: '' });
-    }
-  }
-
-  // Google 라이브러리 로드 대기
-  if (typeof google !== 'undefined') {
-    initTokenClient();
-  } else {
-    const script = document.querySelector('script[src*="gsi/client"]');
-    script.addEventListener('load', initTokenClient);
-  }
+// ══ 일과 템플릿 (wake time 기준 offset in minutes) ══
+const SCH = {
+  '직장인': [
+    {off:0,   id:'wake',   sec:'🌅 아침',  sc:'#7B9CC4', ico:'⏰', bg:'#ddeeff', t:'기상 · 알람',        s:'알람 설정 · 날씨 확인',       type:'alarm'},
+    {off:30,  id:'sched',  sec:null,       sc:null,      ico:'📅', bg:'#fff0e0', t:'오늘 일정 검토',      s:'양치하면서 · 스케줄 확인',     type:'schedule'},
+    {off:60,  id:'bfast',  sec:null,       sc:null,      ico:'🍚', bg:'#e0fff0', t:'아침 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:150, id:'com_am', sec:'🚇 출근',  sc:'#3A7BD5', ico:'🚇', bg:'#ddeeff', t:'출근길',              s:'음악 · 영어공부',              type:'commute'},
+    {off:180, id:'work_am',sec:'💼 업무',  sc:'#C0392B', ico:'🎯', bg:'#ffe0de', t:'오전 업무',           s:'할일 · 프로젝트 관리',         type:'work'},
+    {off:360, id:'lunch',  sec:'🥗 점심',  sc:'#1E8449', ico:'🍱', bg:'#e0fff0', t:'점심 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:420, id:'work_pm',sec:'☀️ 오후',  sc:'#D68910', ico:'💻', bg:'#fff8e0', t:'오후 업무',           s:'집중 모드 · 학습',             type:'work'},
+    {off:540, id:'exer',   sec:null,       sc:null,      ico:'🏋️',bg:'#e0fff0', t:'운동',                s:'종류 · 시간 기록',             type:'exercise'},
+    {off:600, id:'com_pm', sec:'🌆 퇴근',  sc:'#6C3483', ico:'🌆', bg:'#f0e8ff', t:'퇴근길',              s:'음악 · 경로 찾기',             type:'commute'},
+    {off:660, id:'dinner', sec:'🌙 저녁',  sc:'#1A5276', ico:'🍽️',bg:'#e0f0ff', t:'저녁 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:720, id:'leisure',sec:null,       sc:null,      ico:'📺', bg:'#f0e8ff', t:'자유 시간',           s:'유튜브 · 독서 · 취미',         type:'leisure'},
+    {off:840, id:'diary',  sec:'⭐ 취침',  sc:'#212F3D', ico:'✏️', bg:'#eef0f4', t:'하루 마무리 · 일기', s:'오늘 회고 · 내일 준비',         type:'diary'},
+    {off:900, id:'sleep',  sec:null,       sc:null,      ico:'🌙', bg:'#eeeeff', t:'취침',                s:'수면 트래킹 · 내일 알람',       type:'sleep'},
+  ],
+  '재택근무': [
+    {off:0,   id:'wake',   sec:'🌅 아침',  sc:'#7B9CC4', ico:'⏰', bg:'#ddeeff', t:'기상 · 알람',        s:'알람 설정 · 날씨 확인',       type:'alarm'},
+    {off:40,  id:'bfast',  sec:null,       sc:null,      ico:'🍚', bg:'#e0fff0', t:'아침 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:90,  id:'work_am',sec:'💼 업무',  sc:'#C0392B', ico:'🎯', bg:'#ffe0de', t:'오전 업무',           s:'할일 · 프로젝트 관리',         type:'work'},
+    {off:270, id:'lunch',  sec:'🥗 점심',  sc:'#1E8449', ico:'🍱', bg:'#e0fff0', t:'점심 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:330, id:'work_pm',sec:'☀️ 오후',  sc:'#D68910', ico:'💻', bg:'#fff8e0', t:'오후 업무',           s:'집중 모드',                    type:'work'},
+    {off:480, id:'exer',   sec:null,       sc:null,      ico:'🏋️',bg:'#e0fff0', t:'운동',                s:'종류 · 시간 기록',             type:'exercise'},
+    {off:540, id:'dinner', sec:'🌙 저녁',  sc:'#1A5276', ico:'🍽️',bg:'#e0f0ff', t:'저녁 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:600, id:'leisure',sec:null,       sc:null,      ico:'📺', bg:'#f0e8ff', t:'자유 시간',           s:'유튜브 · 독서 · 취미',         type:'leisure'},
+    {off:720, id:'diary',  sec:'⭐ 취침',  sc:'#212F3D', ico:'✏️', bg:'#eef0f4', t:'하루 마무리 · 일기', s:'오늘 회고 · 내일 준비',         type:'diary'},
+    {off:780, id:'sleep',  sec:null,       sc:null,      ico:'🌙', bg:'#eeeeff', t:'취침',                s:'수면 트래킹 · 내일 알람',       type:'sleep'},
+  ],
+  '학생': [
+    {off:0,   id:'wake',   sec:'🌅 아침',  sc:'#7B9CC4', ico:'⏰', bg:'#ddeeff', t:'기상 · 알람',        s:'알람 설정 · 날씨 확인',       type:'alarm'},
+    {off:30,  id:'bfast',  sec:null,       sc:null,      ico:'🍚', bg:'#e0fff0', t:'아침 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:80,  id:'com_am', sec:'🚌 등교',  sc:'#3A7BD5', ico:'🚌', bg:'#ddeeff', t:'등교길',              s:'음악 · 예습',                  type:'commute'},
+    {off:110, id:'work_am',sec:'📖 수업',  sc:'#C0392B', ico:'📖', bg:'#ffe0de', t:'오전 수업 · 공부',   s:'집중 모드 · 과제',             type:'work'},
+    {off:290, id:'lunch',  sec:'🥗 점심',  sc:'#1E8449', ico:'🍱', bg:'#e0fff0', t:'점심 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:350, id:'work_pm',sec:'☀️ 오후',  sc:'#D68910', ico:'✏️', bg:'#fff8e0', t:'오후 수업 · 자습',   s:'집중 모드',                    type:'work'},
+    {off:500, id:'com_pm', sec:'🚌 하교',  sc:'#6C3483', ico:'🚌', bg:'#f0e8ff', t:'하교길',              s:'음악 · 휴식',                  type:'commute'},
+    {off:530, id:'dinner', sec:'🌙 저녁',  sc:'#1A5276', ico:'🍽️',bg:'#e0f0ff', t:'저녁 식사',           s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+    {off:600, id:'exer',   sec:null,       sc:null,      ico:'🏋️',bg:'#e0fff0', t:'운동',                s:'종류 · 시간 기록',             type:'exercise'},
+    {off:660, id:'leisure',sec:null,       sc:null,      ico:'📺', bg:'#f0e8ff', t:'자유 시간',           s:'유튜브 · 독서',                type:'leisure'},
+    {off:780, id:'diary',  sec:'⭐ 취침',  sc:'#212F3D', ico:'✏️', bg:'#eef0f4', t:'하루 마무리 · 일기', s:'오늘 회고 · 내일 준비',         type:'diary'},
+    {off:840, id:'sleep',  sec:null,       sc:null,      ico:'🌙', bg:'#eeeeff', t:'취침',                s:'수면 트래킹 · 내일 알람',       type:'sleep'},
+  ],
 };
+SCH['자영업자'] = SCH['재택근무'];
+SCH['프리랜서'] = SCH['재택근무'];
+SCH['야간근무'] = [
+  {off:0,   id:'wake',   sec:'🌇 오후',  sc:'#D68910', ico:'⏰', bg:'#fff8e0', t:'기상 · 알람',        s:'알람 설정 · 날씨 확인',       type:'alarm'},
+  {off:60,  id:'bfast',  sec:null,       sc:null,      ico:'🍚', bg:'#e0fff0', t:'식사',                s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+  {off:120, id:'leisure',sec:null,       sc:null,      ico:'📺', bg:'#f0e8ff', t:'자유 시간',           s:'개인 시간 · 준비',             type:'leisure'},
+  {off:240, id:'work_am',sec:'🌆 출근',  sc:'#C0392B', ico:'🎯', bg:'#ffe0de', t:'출근 준비',           s:'저녁 식사 · 준비',             type:'work'},
+  {off:300, id:'com_am', sec:null,       sc:null,      ico:'🌆', bg:'#f0e8ff', t:'출근길',              s:'음악 · 경로',                  type:'commute'},
+  {off:330, id:'work_pm',sec:'🌙 야간',  sc:'#212F3D', ico:'💼', bg:'#eeeeff', t:'업무 시간',           s:'할일 · 프로젝트',              type:'work'},
+  {off:570, id:'com_pm', sec:null,       sc:null,      ico:'🌅', bg:'#ddeeff', t:'퇴근길',              s:'음악 · 경로',                  type:'commute'},
+  {off:600, id:'dinner', sec:null,       sc:null,      ico:'🍽️',bg:'#e0f0ff', t:'식사',                s:'사진 촬영 → AI 칼로리 분석',  type:'meal'},
+  {off:660, id:'diary',  sec:'⭐ 취침',  sc:'#212F3D', ico:'✏️', bg:'#eef0f4', t:'하루 마무리 · 일기', s:'오늘 회고 · 내일 준비',         type:'diary'},
+  {off:720, id:'sleep',  sec:null,       sc:null,      ico:'🌙', bg:'#eeeeff', t:'취침',                s:'수면 트래킹 · 내일 알람',       type:'sleep'},
+];
 
-function googleConnect() {
-  if (accessToken) { googleDisconnect(); return; }
-  if (tokenClient) {
-    tokenClient.requestAccessToken();
-  } else {
-    alert('Google 라이브러리 로딩 중입니다. 잠시 후 다시 눌러주세요.');
-  }
+// ══ Utilities ══
+function toTime(min){ const h=Math.floor(min/60)%24,m=min%60; return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+function today(){ const n=new Date(); return n.getFullYear()+'-'+(n.getMonth()+1)+'-'+n.getDate(); }
+function saveTasks(){ localStorage.setItem('dp_tasks', JSON.stringify(tasks)); }
+function saveMeals(){ localStorage.setItem('dp_meals', JSON.stringify(meals)); updateCalStat(); }
+function saveDiary(){ localStorage.setItem('dp_diary', JSON.stringify(diaryLog)); }
+
+// ══ Setup ══
+function selLS(btn){ document.querySelectorAll('.ls-btn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); }
+
+function saveAndStart(){
+  const ls = document.querySelector('.ls-btn.sel')?.dataset.v;
+  const wt = document.getElementById('wake-time').value;
+  if(!ls) return alert('라이프스타일을 선택해주세요');
+  if(!wt) return alert('기상 시간을 선택해주세요');
+  settings = { lifestyle: ls, wakeTime: wt };
+  localStorage.setItem('dp_settings', JSON.stringify(settings));
+  initApp();
 }
 
-async function fetchUserInfo() {
-  const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: { Authorization: `Bearer ${accessToken}` }
+function resetSettings(){ localStorage.removeItem('dp_settings'); location.reload(); }
+
+// ══ App Init ══
+function initApp(){
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('reset-btn').style.display = 'flex';
+  document.getElementById('lifestyle-tag').textContent = settings.lifestyle + ' · 기상 ' + settings.wakeTime;
+  renderSchedule();
+  tick(); setInterval(tick, 1000);
+  updateNow(); setInterval(updateNow, 60000);
+  updateTaskStat(); updateCalStat();
+}
+
+// ══ Schedule Render ══
+function renderSchedule(){
+  const [wh, wm] = settings.wakeTime.split(':').map(Number);
+  const wakeMin = wh*60 + wm;
+  const items = SCH[settings.lifestyle] || SCH['직장인'];
+  const container = document.getElementById('schedule');
+  container.innerHTML = '';
+  let lastSec = null;
+
+  items.forEach(item => {
+    const timeMin = wakeMin + item.off;
+    const timeStr = toTime(timeMin);
+
+    if(item.sec && item.sec !== lastSec){
+      lastSec = item.sec;
+      const sh = document.createElement('div');
+      sh.className = 'shdr';
+      sh.style.background = item.sc;
+      sh.textContent = item.sec + '  ' + timeStr + '~';
+      container.appendChild(sh);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.id = item.id;
+    row.dataset.min = timeMin;
+    row.innerHTML = `
+      <div class="rtime">${timeStr}</div>
+      <div class="rico" style="background:${item.bg}">${item.ico}</div>
+      <div class="rinfo">
+        <div class="rtit">${item.t}</div>
+        <div class="rsub">${item.s}</div>
+      </div>
+      <div class="rarr">›</div>`;
+    container.appendChild(row);
+
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.innerHTML = '<div class="panel-inner">'+buildPanel(item, timeStr)+'</div>';
+    container.appendChild(panel);
+
+    row.addEventListener('click', ()=>{
+      const isOpen = panel.classList.contains('open');
+      document.querySelectorAll('.panel.open').forEach(p=>p.classList.remove('open'));
+      document.querySelectorAll('.row.active').forEach(r=>r.classList.remove('active'));
+      if(!isOpen){ panel.classList.add('open'); row.classList.add('active'); }
+    });
+    panel.addEventListener('click', e=>e.stopPropagation());
+
+    // 패널 이벤트 등록
+    setTimeout(()=>setupPanelEvents(panel, item), 0);
   });
-  const user = await res.json();
-  localStorage.setItem('g_user', JSON.stringify({ name: user.name, email: user.email }));
-  showConnected(user.name, user.email);
-  loadTasksFromSheet();
 }
 
-function showConnected(name, email) {
-  document.getElementById('gico').textContent = '✓';
-  document.getElementById('gico').classList.add('on');
-  document.getElementById('gsub').textContent = '구글 계정 연결됨 · 동기화 중';
-  document.getElementById('gbtn').textContent = '연결 해제';
-  document.getElementById('gbtn').classList.replace('off','on');
-  document.getElementById('gavt').textContent = name[0];
-  document.getElementById('gname').textContent = name + '님';
-  document.getElementById('gmail').textContent = email;
-  document.getElementById('guser').style.display = 'flex';
-  document.getElementById('gsheets').style.display = 'block';
-  setTimeout(() => { document.getElementById('gsync').textContent = '✅ 동기화 완료'; }, 1500);
-}
+// ══ Panel Builder ══
+function buildPanel(item, timeStr){
+  switch(item.type){
+    case 'alarm': return `
+      <div class="panel-title">⏰ 알람 설정</div>
+      <div class="p-row">
+        <span class="p-label">기상 시간</span>
+        <input type="time" class="p-input" id="alarm-time-${item.id}" value="${settings.wakeTime}">
+      </div>
+      <div class="p-row" style="flex-wrap:wrap;gap:6px;">
+        ${['월','화','수','목','금','토','일'].map((d,i)=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" ${i<5?'checked':''} style="width:15px;height:15px;"> ${d}</label>`).join('')}
+      </div>
+      <button class="p-btn primary" style="width:100%;margin-top:10px;" onclick="saveAlarm('${item.id}')">저장</button>`;
 
-function googleDisconnect() {
-  localStorage.removeItem('g_token');
-  localStorage.removeItem('g_user');
-  accessToken = null;
-  google.accounts.oauth2.revoke(accessToken, () => {});
-  document.getElementById('gico').textContent = 'G';
-  document.getElementById('gico').classList.remove('on');
-  document.getElementById('gsub').textContent = '할일·일기·일정이 구글 시트에 자동 저장돼요';
-  document.getElementById('gbtn').textContent = '연결하기';
-  document.getElementById('gbtn').classList.replace('on','off');
-  document.getElementById('guser').style.display = 'none';
-  document.getElementById('gsheets').style.display = 'none';
-}
+    case 'meal': return `
+      <div class="panel-title">🍽️ 식단 기록 · AI 분석</div>
+      <div class="cam-area" id="cam-${item.id}" onclick="document.getElementById('file-${item.id}').click()">
+        <input type="file" id="file-${item.id}" accept="image/*" capture="environment">
+        <div style="font-size:28px;margin-bottom:6px;">📷</div>
+        <div style="font-size:13px;color:#888;">사진을 찍거나 선택하세요</div>
+        <div style="font-size:11px;color:#bbb;margin-top:4px;">AI가 칼로리를 자동으로 분석해요</div>
+      </div>
+      <img id="prev-${item.id}" class="cam-preview">
+      <div class="analyzing" id="analyzing-${item.id}"><span class="spinning">⏳</span> AI 분석 중...</div>
+      <div class="ai-result" id="result-${item.id}">
+        <div class="ar-title">✅ AI 분석 완료</div>
+        <div class="ar-food" id="r-food-${item.id}">---</div>
+        <div class="ar-cal" id="r-cal-${item.id}">---</div>
+        <div class="ar-comment" id="r-comment-${item.id}">---</div>
+      </div>
+      <div class="cal-bar-wrap">
+        <div class="cal-bar-label"><span>오늘 총 섭취</span><span id="cal-total-${item.id}">0 / 1800 kcal</span></div>
+        <div class="cal-bar"><div class="cal-fill" id="cal-fill-${item.id}" style="width:0%"></div></div>
+      </div>`;
 
-// 구글 시트에서 할일 불러오기
-async function loadTasksFromSheet() {
-  if (!accessToken) return;
-  try {
-    const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Tasks!A:C`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    const data = await res.json();
-    if (data.values && data.values.length > 1) {
-      renderTasks(data.values.slice(1));
-    }
-  } catch(e) { console.log('시트 불러오기 실패:', e); }
-}
+    case 'work': return `
+      <div class="panel-title">🎯 할일 & 프로젝트</div>
+      <div class="task-list" id="tlist-${item.id}"></div>
+      <div class="add-task-row">
+        <input type="text" class="add-task-input" id="tinput-${item.id}" placeholder="할일 추가..." onkeydown="if(event.key==='Enter')addTask('${item.id}')">
+        <button class="p-btn primary" onclick="addTask('${item.id}')">+</button>
+      </div>`;
 
-function renderTasks(rows) {
-  const list = document.getElementById('tasks');
-  list.innerHTML = rows.map(row => `
-    <div class="task" onclick="toggleTask(this,'${row[0]}')">
-      <div class="chk ${row[1]==='done'?'done':''}">${row[1]==='done'?'✓':''}</div>
-      <span class="ttxt ${row[1]==='done'?'done':''}">${row[0]||''}</span>
-    </div>`).join('');
-  updateStat();
-}
+    case 'commute': return `
+      <div class="panel-title">🎵 출퇴근길 모드</div>
+      <div class="music-player">
+        <div class="music-ico">🎵</div>
+        <div class="music-info">
+          <div class="music-title">Lucid Dream</div>
+          <div class="music-artist">aespa · 출근길 플레이리스트</div>
+        </div>
+        <div class="music-ctrl">
+          <button class="mc-btn">⏮</button>
+          <button class="mc-play" id="mplay-${item.id}" onclick="togglePlay('${item.id}')">⏸</button>
+          <button class="mc-btn">⏭</button>
+        </div>
+      </div>
+      <div class="music-prog"><div class="music-prog-fill"></div></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="p-btn blue" style="flex:1;" onclick="sendPrompt('오늘 출퇴근길에 들을 만한 음악 플레이리스트 추천해줘')">🎵 음악 추천</button>
+        <button class="p-btn sec" style="flex:1;" onclick="sendPrompt('오늘 영어 회화 표현 5개 알려줘. 실생활에서 바로 쓸 수 있는 거로.')">📖 영어공부</button>
+      </div>`;
 
-// 구글 시트에 할일 상태 저장
-async function saveTaskToSheet(taskName, status) {
-  if (!accessToken) return;
-  const today = new Date().toLocaleDateString('ko-KR');
-  await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Tasks!A:C:append?valueInputOption=USER_ENTERED`,
-    { method:'POST',
-      headers:{ Authorization:`Bearer ${accessToken}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ values: [[taskName, status, today]] })
-    }
-  );
-}
+    case 'exercise': return `
+      <div class="panel-title">🏋️ 운동 기록</div>
+      <div class="p-label" style="margin-bottom:8px;">운동 종류</div>
+      <div class="ex-chips">
+        ${['🏃 달리기','🏋️ 헬스','🧘 요가','🚴 사이클','🏊 수영','⚽ 구기종목','🚶 걷기','기타'].map(e=>`<div class="ex-chip" onclick="selEx(this)">${e}</div>`).join('')}
+      </div>
+      <div class="p-row">
+        <span class="p-label">시간</span>
+        <input type="number" class="p-input" id="ex-min-${item.id}" placeholder="분" min="0" max="300">
+        <span style="font-size:12px;color:#888;margin-left:4px;">분</span>
+      </div>
+      <button class="p-btn green" style="width:100%;margin-top:4px;" onclick="saveExercise('${item.id}')">기록 저장</button>`;
 
-// 일기 저장
-async function saveDiary() {
-  const text = document.getElementById('dtxt').value.trim();
-  if (!text) return;
-  const btn = document.getElementById('savbtn');
-  btn.textContent = '⏳ 저장 중...';
-  if (accessToken) {
-    const today = new Date().toLocaleDateString('ko-KR');
-    const mood = document.querySelector('.moodb.sel')?.textContent || '';
-    await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Diary!A:C:append?valueInputOption=USER_ENTERED`,
-      { method:'POST',
-        headers:{ Authorization:`Bearer ${accessToken}`, 'Content-Type':'application/json' },
-        body: JSON.stringify({ values: [[today, mood, text]] })
-      }
-    );
-    btn.textContent = '✅ 저장됨!';
-  } else {
-    btn.textContent = '⚠️ 구글 연결 후 저장 가능';
+    case 'diary': return `
+      <div class="panel-title">✏️ 오늘 일기</div>
+      <div class="mood-row">
+        <span style="font-size:11px;color:#888;margin-right:4px;">기분</span>
+        ${['🤩','😊','😐','😔','😤'].map(m=>`<button class="mood-btn" onclick="selMood(this)">${m}</button>`).join('')}
+      </div>
+      <textarea class="diary-area" id="diary-text" placeholder="오늘 하루를 자유롭게 기록해보세요..."></textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="p-btn sec" style="flex:1;" onclick="aiDraft()">✨ AI 초안</button>
+        <button class="p-btn primary" style="flex:1;" id="diary-save" onclick="saveDiaryEntry()">💾 저장</button>
+      </div>
+      ${diaryLog.slice(-2).reverse().map(d=>`
+        <div style="margin-top:8px;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #eee;">
+          <div style="font-size:10px;color:#888;margin-bottom:3px;">${d.date} ${d.mood||''}</div>
+          <div style="font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${d.text}</div>
+        </div>`).join('')}`;
+
+    case 'sleep': return `
+      <div class="panel-title">🌙 수면 · 내일 알람</div>
+      <div class="p-row">
+        <span class="p-label">내일 기상</span>
+        <input type="time" class="p-input" value="${settings.wakeTime}">
+      </div>
+      <button class="p-btn primary" style="width:100%;margin-top:8px;">알람 설정 💤</button>
+      <div style="margin-top:10px;padding:10px;background:#eeeeff;border-radius:10px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">😴</div>
+        <div style="font-size:13px;font-weight:700;">수면 트래킹 준비됨</div>
+        <div style="font-size:11px;color:#888;margin-top:2px;">기상 시 앱을 열면 수면 시간이 기록돼요</div>
+      </div>`;
+
+    case 'schedule': return `
+      <div class="panel-title">📅 오늘 일정</div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px;">구글 캘린더 연결 시 자동으로 불러와요</div>
+      <button class="p-btn blue" style="width:100%;" onclick="sendPrompt('오늘 일정을 정리해줘. 업무, 개인, 운동 카테고리로 나눠서.')">📅 AI 일정 정리</button>`;
+
+    case 'leisure': return `
+      <div class="panel-title">📺 자유 시간</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="p-btn sec" onclick="sendPrompt('오늘 볼만한 유튜브 채널이나 영상 추천해줘')">📺 유튜브 추천</button>
+        <button class="p-btn sec" onclick="sendPrompt('읽을만한 책 추천해줘. 자기계발 또는 경제 관련으로.')">📚 독서 추천</button>
+        <button class="p-btn sec" onclick="sendPrompt('오늘 주식/코인 시장 간단하게 정리해줘')">📈 시장 현황</button>
+      </div>`;
+
+    default: return `<div class="panel-title">${item.t}</div><div style="font-size:12px;color:#888;">설정 준비 중...</div>`;
   }
-  setTimeout(() => { btn.textContent = '💾 저장 (구글 시트)'; }, 2000);
 }
 
-// 공통 함수들
+// ══ Panel Events ══
+function setupPanelEvents(panel, item){
+  // Meal photo
+  if(item.type === 'meal'){
+    const fileInput = panel.querySelector(`#file-${item.id}`);
+    if(fileInput){
+      fileInput.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev)=>{
+          const prev = panel.querySelector(`#prev-${item.id}`);
+          if(prev){ prev.src = ev.target.result; prev.style.display = 'block'; }
+          analyzeMeal(ev.target.result.split(',')[1], file.type, item.id);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+  // Tasks
+  if(item.type === 'work') renderTasks(item.id);
+}
+
+// ══ Task Functions ══
+function renderTasks(blockId){
+  const list = document.getElementById(`tlist-${blockId}`);
+  if(!list) return;
+  const blockTasks = tasks.filter(t=>t.block===blockId || !t.block);
+  list.innerHTML = blockTasks.map((t,i)=>`
+    <div class="task-item">
+      <div class="task-chk ${t.done?'done':''}" onclick="toggleTask(${t.id})">
+        ${t.done?'✓':''}
+      </div>
+      <span class="task-txt ${t.done?'done':''}">${t.text}</span>
+      <span class="task-del" onclick="deleteTask(${t.id})">✕</span>
+    </div>`).join('');
+  updateTaskStat();
+}
+
+function addTask(blockId){
+  const input = document.getElementById(`tinput-${blockId}`);
+  if(!input || !input.value.trim()) return;
+  const task = { id: Date.now(), text: input.value.trim(), done: false, block: blockId, date: today() };
+  tasks.push(task);
+  saveTasks();
+  input.value = '';
+  renderTasks(blockId);
+}
+
+function toggleTask(id){
+  const t = tasks.find(t=>t.id===id);
+  if(t){ t.done = !t.done; saveTasks(); }
+  document.querySelectorAll('.panel.open').forEach(p=>{
+    const blockId = p.closest('[data-id]')?.previousElementSibling?.dataset.id;
+    if(blockId) renderTasks(blockId);
+  });
+}
+
+function deleteTask(id){
+  tasks = tasks.filter(t=>t.id!==id);
+  saveTasks();
+  document.querySelectorAll('.panel.open').forEach(p=>{
+    const row = p.previousElementSibling;
+    if(row) renderTasks(row.dataset.id);
+  });
+}
+
+function updateTaskStat(){
+  const done = tasks.filter(t=>t.done).length;
+  document.getElementById('task-stat').textContent = done+'/'+tasks.length;
+}
+
+// ══ Meal AI Analysis ══
+async function analyzeMeal(base64, mimeType, blockId){
+  const analyzing = document.getElementById(`analyzing-${blockId}`);
+  const result = document.getElementById(`result-${blockId}`);
+  if(analyzing) analyzing.style.display = 'block';
+  if(result) result.style.display = 'none';
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:500,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image', source:{type:'base64', media_type:mimeType, data:base64}},
+            {type:'text', text:'이 음식 사진을 분석해서 JSON으로만 응답해. 마크다운 없이 순수 JSON만: {"food_name":"음식이름","total_calories":숫자,"detail":"단백질/탄수화물/지방 간략히","health_tip":"건강 조언 한줄"}'}
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.filter(b=>b.type==='text').map(b=>b.text).join('') || '';
+    const parsed = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{}');
+
+    if(analyzing) analyzing.style.display = 'none';
+    if(result) result.style.display = 'block';
+    const foodEl = document.getElementById(`r-food-${blockId}`);
+    const calEl = document.getElementById(`r-cal-${blockId}`);
+    const comEl = document.getElementById(`r-comment-${blockId}`);
+    if(foodEl) foodEl.textContent = parsed.food_name || '음식';
+    if(calEl) calEl.textContent = (parsed.total_calories||0) + ' kcal · ' + (parsed.detail||'');
+    if(comEl) comEl.textContent = parsed.health_tip || '';
+
+    // 칼로리 기록
+    const cal = parsed.total_calories || 0;
+    meals.push({ time: new Date().toISOString(), block: blockId, name: parsed.food_name, calories: cal });
+    saveMeals();
+
+  }catch(e){
+    if(analyzing) analyzing.style.display = 'none';
+    if(result){ result.style.display = 'block'; }
+    const foodEl = document.getElementById(`r-food-${blockId}`);
+    if(foodEl){ foodEl.textContent = '분석 실패'; }
+    const calEl = document.getElementById(`r-cal-${blockId}`);
+    if(calEl){ calEl.textContent = '수동으로 입력해주세요'; }
+  }
+  updateCalDisplay(blockId);
+}
+
+function updateCalStat(){
+  const todayMeals = meals.filter(m=>m.time?.startsWith(new Date().toISOString().slice(0,10)));
+  const total = todayMeals.reduce((s,m)=>s+(m.calories||0),0);
+  const el = document.getElementById('cal-stat');
+  if(el) el.textContent = total.toLocaleString();
+}
+
+function updateCalDisplay(blockId){
+  const todayMeals = meals.filter(m=>m.time?.startsWith(new Date().toISOString().slice(0,10)));
+  const total = todayMeals.reduce((s,m)=>s+(m.calories||0),0);
+  const goal = 1800;
+  const pct = Math.min(100, Math.round(total/goal*100));
+  const totalEl = document.getElementById(`cal-total-${blockId}`);
+  const fillEl = document.getElementById(`cal-fill-${blockId}`);
+  if(totalEl) totalEl.textContent = total + ' / ' + goal + ' kcal';
+  if(fillEl) fillEl.style.width = pct + '%';
+  updateCalStat();
+}
+
+// ══ Diary ══
+function selMood(btn){ document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); }
+
+function saveDiaryEntry(){
+  const text = document.getElementById('diary-text')?.value?.trim();
+  if(!text) return;
+  const mood = document.querySelector('.mood-btn.sel')?.textContent || '';
+  diaryLog.push({ date: today(), mood, text });
+  saveDiary();
+  const btn = document.getElementById('diary-save');
+  if(btn){ btn.textContent = '✅ 저장됨!'; btn.style.background='#1E8449'; setTimeout(()=>{ btn.textContent='💾 저장'; btn.style.background=''; },2000); }
+}
+
+function aiDraft(){
+  sendPrompt('오늘 하루 일기 초안을 써줘. 오늘 날짜 기준으로, 주식 스크리너 작업과 하루 일과를 바탕으로 따뜻하고 간결하게 3~4문장으로.');
+}
+
+// ══ Exercise ══
+function selEx(el){ document.querySelectorAll('.ex-chip').forEach(c=>c.classList.remove('sel')); el.classList.add('sel'); }
+
+function saveExercise(blockId){
+  const min = document.getElementById(`ex-min-${blockId}`)?.value;
+  const type = document.querySelector('.ex-chip.sel')?.textContent || '운동';
+  if(!min) return;
+  const focusEl = document.getElementById('focus-stat');
+  if(focusEl){ const cur = parseInt(focusEl.textContent)||0; focusEl.textContent = (cur + Math.round(parseInt(min)/60*10)/10)+'h'; }
+  alert(`✅ ${type} ${min}분 기록됐어요!`);
+}
+
+// ══ Alarm ══
+function saveAlarm(blockId){
+  const newTime = document.getElementById(`alarm-time-${blockId}`)?.value;
+  if(!newTime) return;
+  settings.wakeTime = newTime;
+  localStorage.setItem('dp_settings', JSON.stringify(settings));
+  document.getElementById('lifestyle-tag').textContent = settings.lifestyle + ' · 기상 ' + newTime;
+  renderSchedule();
+  alert('✅ 기상 시간이 ' + newTime + '으로 변경됐어요!');
+}
+
+// ══ Music ══
+let playing = {};
+function togglePlay(id){
+  playing[id] = !playing[id];
+  const btn = document.getElementById(`mplay-${id}`);
+  if(btn) btn.textContent = playing[id] ? '⏸' : '▶';
+}
+
+// ══ Now Highlight ══
+function updateNow(){
+  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
+  const rows = document.querySelectorAll('.row[data-min]');
+  let curr = null;
+  rows.forEach(r=>{ r.classList.remove('now'); const rm=parseInt(r.dataset.min); if(rm<=nowMin) curr=r; });
+  if(curr){
+    curr.classList.add('now');
+    const tit = curr.querySelector('.rtit');
+    if(tit && !tit.querySelector('.now-tag')){
+      const tag = document.createElement('span');
+      tag.className = 'now-tag'; tag.textContent = '지금';
+      tit.appendChild(tag);
+    }
+  }
+}
+
+// ══ Clock ══
 function tick(){
-  const n=new Date(),d=['일','월','화','수','목','금','토'];
-  document.getElementById('clk').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-  document.getElementById('cdt').textContent=(n.getMonth()+1)+'월 '+n.getDate()+'일 ('+d[n.getDay()]+')';
+  const n=new Date(), d=['일','월','화','수','목','금','토'];
+  const clk=document.getElementById('clk'); if(clk) clk.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  const cdt=document.getElementById('cdt'); if(cdt) cdt.textContent=(n.getMonth()+1)+'월 '+n.getDate()+'일 ('+d[n.getDay()]+')';
 }
-tick(); setInterval(tick,1000);
 
+// ══ Google (demo) ══
+function googleConnect(){
+  const btn=document.getElementById('g-btn');
+  const ico=document.getElementById('g-ico');
+  const title=document.getElementById('g-title');
+  const sub=document.getElementById('g-sub');
+  if(btn.classList.contains('on')){
+    btn.textContent='연결'; btn.classList.remove('on');
+    ico.textContent='G'; ico.classList.remove('on');
+    title.textContent='구글 계정 연결';
+    sub.textContent='할일·일기가 구글 시트에 저장돼요';
+    return;
+  }
+  btn.textContent='연결 중...'; btn.disabled=true;
+  setTimeout(()=>{
+    ico.textContent='✓'; ico.classList.add('on');
+    title.textContent='연결됨';
+    sub.textContent='✅ 구글 시트 동기화 완료';
+    btn.textContent='해제'; btn.classList.add('on'); btn.disabled=false;
+  },1200);
+}
+
+// ══ Nav ══
 function nav(el){ document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on')); el.classList.add('on'); }
 
-function toggleTask(t, name) {
-  const c=t.querySelector('.chk'), x=t.querySelector('.ttxt'), d=!c.classList.contains('done');
-  c.classList.toggle('done',d); x.classList.toggle('done',d);
-  c.textContent=d?'✓':'';
-  updateStat();
-  saveTaskToSheet(name, d?'done':'todo');
-}
-
-function updateStat(){
-  const done=document.querySelectorAll('#tasks .chk.done').length;
-  const all=document.querySelectorAll('#tasks .task').length;
-  document.getElementById('tstat').textContent=done+'/'+all;
-}
-
-document.querySelectorAll('.moodb').forEach(b=>{
-  b.addEventListener('click',()=>{ document.querySelectorAll('.moodb').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); });
-});
-
-document.querySelectorAll('#tasks .task').forEach(t=>{
-  t.addEventListener('click',()=>{
-    const c=t.querySelector('.chk'),x=t.querySelector('.ttxt'),d=!c.classList.contains('done');
-    c.classList.toggle('done',d);x.classList.toggle('done',d);
-    c.textContent=d?'✓':'';
-    updateStat();
-    saveTaskToSheet(x.textContent, d?'done':'todo');
-  });
-});
-updateStat();
+// ══ Start ══
+if(settings){ initApp(); } else { document.getElementById('setup').style.display='flex'; }
 </script>
-</body>
-</html>
