@@ -200,6 +200,16 @@ let tokenClient = null;
 
 // Google Identity Services 초기화
 window.onload = function() {
+  // 저장된 토큰 복원
+  const saved = localStorage.getItem('g_token');
+  const savedUser = localStorage.getItem('g_user');
+  if (saved && savedUser) {
+    accessToken = saved;
+    const user = JSON.parse(savedUser);
+    showConnected(user.name, user.email);
+    loadTasksFromSheet();
+  }
+
   if (typeof google !== 'undefined') {
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
@@ -207,6 +217,7 @@ window.onload = function() {
       callback: (res) => {
         if (res.access_token) {
           accessToken = res.access_token;
+          localStorage.setItem('g_token', accessToken);
           fetchUserInfo();
         }
       }
@@ -228,6 +239,7 @@ async function fetchUserInfo() {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
   const user = await res.json();
+  localStorage.setItem('g_user', JSON.stringify({ name: user.name, email: user.email }));
   showConnected(user.name, user.email);
   loadTasksFromSheet();
 }
@@ -247,6 +259,8 @@ function showConnected(name, email) {
 }
 
 function googleDisconnect() {
+  localStorage.removeItem('g_token');
+  localStorage.removeItem('g_user');
   accessToken = null;
   google.accounts.oauth2.revoke(accessToken, () => {});
   document.getElementById('gico').textContent = 'G';
