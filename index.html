@@ -351,7 +351,9 @@ document.querySelectorAll('#tasks .task').forEach(t=>{
   t.addEventListener('click',()=>{
     const c=t.querySelector('.chk'),x=t.querySelector('.ttxt'),d=!c.classList.contains('done');
     c.classList.toggle('done',d);x.classList.toggle('done',d);
-    c.textContent=d?'✓':''; updateStat();
+    c.textContent=d?'✓':'';
+    updateStat();
+    saveTaskToSheet(x.textContent, d?'done':'todo');
   });
 });
 updateStat();
